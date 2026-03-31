@@ -1,0 +1,56 @@
+project:
+  name: "ANCS Modeling"
+  version: "0.0.0"
+
+run:
+  experiment: "experiment_1" # Either 1 or 2 depending on what needs to be measured
+  input_set: "generic"
+  active_input: "sig500_2000_noise300_2200.wav"
+  save_intermediate: true
+  overwrite_outputs: true
+
+paths:
+  input_root: "./input"
+  data_root: "./data"
+  generated_root: "./data/generated"
+  processed_root: "./data/processed"
+  figures_root: "./data/figures"
+
+audio:
+  normalize: true
+  target_sample_rate: null # null = keep original WAV sample rate
+  channel_map:
+    primary: 0 # Left Channel = d[n]
+    reference: 1 # Right Channel = x[n]
+
+lms:
+  M: 10
+  beta: 0.01
+  wamup_samples: 0
+
+analysis:
+  mse_window: 100
+  epsilon: 1.0e-12
+  save_csv: true
+  save_plots: true
+  show_plots: false
+
+experiment_1:
+  runs:
+    - { name: "run1", M: 10, beta: 0.001 }
+    - { name: "run2", M: 10, beta: 0.01 }
+    - { name: "run3", M: 10, beta: 0.1 }
+    - { name: "run4", M: 50, beta: 0.001 }
+    - { name: "run5", M: 50, beta: 0.01 }
+    - { name: "run6", M: 50, beta: 0.1 }
+
+experiment_2:
+  fixed:
+    M: 10
+    beta: 0.01
+  files:
+    - { name: "sine_0ms", file: "sine/sine.wav", delay_ms: 0 }
+    - { name: "sine_1ms", file: "sine/Sine1ms_delay.wav", delay_ms: 1 }
+    - { name: "sine_2ms", file: "sine/Sine2ms_delay.wav", delay_ms: 2 }
+    - { name: "sine_3ms", file: "sine/Sine3ms_delay.wav", delay_ms: 3 }
+    - { name: "sine_4ms", file: "sine/Sine4ms_delay.wav", delay_ms: 4 }
