@@ -5,13 +5,13 @@
 #include <stdio.h>
 #include <math.h>
 
-#define ANC_FILTER_LEN      10
+#define ANC_FILTER_LEN      50
 #define ANC_BETA            0.01f
 
 #define ANC_OUTPUT_GAIN     0.90f
 
 #define ANC_UART_BAUD       115200
-#define ANC_UART_DECIM      8
+#define ANC_UART_DECIM      32
 
 #define ANC_EPSILON         1.0e-8f
 #define ANC_WEIGHT_LIMIT    4.0f
@@ -26,6 +26,7 @@
 typedef struct
 {
     float d;
+    float x;
     float e;
 } ANC_LogSample;
 
@@ -56,7 +57,7 @@ float ANC_ProcessSample(float d_in, float x_in);
 float ANC_ClampFloat(float x, float limit);
 
 /* New buffered logging API to fix the slowness issue */
-void ANC_BufferPair(float d, float e);
+void ANC_BufferTriple(float d, float x, float e);
 void ANC_StreamBufferedData(void);
 
 #endif

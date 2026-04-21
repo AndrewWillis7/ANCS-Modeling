@@ -31,7 +31,7 @@ void ANC_Init(void)
 
     Init_UART2(ANC_UART_BAUD);
     Puts_UART2("ANC START\r\n");
-    Puts_UART2("d,e\r\n");
+    Puts_UART2("d,x,e\r\n");
 }
 
 float ANC_ClampFloat(float x, float limit)
@@ -75,8 +75,8 @@ float ANC_ProcessSample(float d_in, float x_in)
     return e;
 }
 
-/* ISR-safe-ish buffer write: no sprintf, no UART */
-void ANC_BufferPair(float d, float e)
+/* ISR-safe-ish buffer write: no sprintf, no UART, adapted to x(n) transmission */
+void ANC_BufferTriple(float d, float x, float e)
 {
     unsigned int nextIdx;
 
@@ -88,7 +88,6 @@ void ANC_BufferPair(float d, float e)
 
     nextIdx = (g_logWriteIdx + 1) % ANC_LOG_BUFFER_SIZE;
 
-    /* Buffer full: drop sample and count overflow */
     if(nextIdx == g_logReadIdx)
     {
         g_logOverflow++;
@@ -96,6 +95,7 @@ void ANC_BufferPair(float d, float e)
     }
 
     g_logBuffer[g_logWriteIdx].d = d;
+    g_logBuffer[g_logWriteIdx].x = x;
     g_logBuffer[g_logWriteIdx].e = e;
     g_logWriteIdx = nextIdx;
 }
@@ -103,20 +103,28 @@ void ANC_BufferPair(float d, float e)
 /* Call this in main loop, not ISR */
 void ANC_StreamBufferedData(void)
 {
-    char msg[64];
+    static char tx_msg[96];
+    static int tx_len = 0;
+    static int tx_pos = 0;
 
-    while(g_logReadIdx != g_logWriteIdx)
+    if(tx_pos < tx_len)
     {
-        /* Optional: check UART ready if your support code has it */
-        if(!IsTxReady_UART2())
-            break;
-
-        sprintf(msg, "%.6f,%.6f\r\n",
-                g_logBuffer[g_logReadIdx].d,
-                g_logBuffer[g_logReadIdx].e);
-
-        Puts_UART2(msg);
-
-        g_logReadIdx = (g_logReadIdx + 1) % ANC_LOG_BUFFER_SIZE;
+        if(IsTxReady_UART2())
+        {
+            Write_UART2((Uint8)tx_msg[tx_pos]);
+            tx_pos++;
+        }
+        return;
     }
+
+    if(g_logReadIdx == g_logWriteIdx)
+        return;
+
+    tx_len = sprintf(tx_msg, "%.6f,%.6f,%.6f\r\n",
+                     g_logBuffer[g_logReadIdx].d,
+                     g_logBuffer[g_logReadIdx].x,
+                     g_logBuffer[g_logReadIdx].e);
+    tx_pos = 0;
+
+    g_logReadIdx = (g_logReadIdx + 1) % ANC_LOG_BUFFER_SIZE;
 }

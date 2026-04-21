@@ -23,7 +23,7 @@ interrupt void Codec_ISR()
     e_norm = ANC_ProcessSample(d_norm, x_norm);
 
     /* Store for later UART transmission */
-    ANC_BufferPair(d_norm, e_norm);
+    ANC_BufferTriple(d_norm, x_norm, e_norm);
 
     out_f = ANC_OUTPUT_GAIN * e_norm * ANC_OUT_LIMIT;
     out_f = ANC_ClampFloat(out_f, ANC_OUT_LIMIT);
