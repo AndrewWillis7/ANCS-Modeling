@@ -21,8 +21,11 @@
 #define RIGHT   1
 
 /* -------- UART sample buffering -------- */
+
+// Buffer scaled for the triple output, e[n], d[n], x[n]
 #define ANC_LOG_BUFFER_SIZE 2048
 
+// log sample for convinience
 typedef struct
 {
     float d;
@@ -30,6 +33,7 @@ typedef struct
     float e;
 } ANC_LogSample;
 
+// state machine for non-blocking logger
 typedef struct
 {
     float x_hist[ANC_FILTER_LEN];
@@ -52,12 +56,19 @@ extern volatile unsigned int g_logReadIdx;
 extern volatile unsigned int g_logOverflow;
 extern ANC_LogSample g_logBuffer[ANC_LOG_BUFFER_SIZE];
 
+// Starts up the ANC controller 
 void ANC_Init(void);
+
+// Large function that processes the incoming noise into posable FFT like systems
 float ANC_ProcessSample(float d_in, float x_in);
+
+// Clamping function to retain magnitudes.
 float ANC_ClampFloat(float x, float limit);
 
 /* New buffered logging API to fix the slowness issue */
 void ANC_BufferTriple(float d, float x, float e);
+
+// data streaming over UART for Matlab interpretation
 void ANC_StreamBufferedData(void);
 
 #endif

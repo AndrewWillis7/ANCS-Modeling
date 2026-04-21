@@ -7,7 +7,10 @@ void _StartUp_(void)
 
 int main(void)
 {
+    /* Generic startup message for the DSP board*/
     DSP_Init();
+
+    /* Custon Startup for ANC Control System */
     _StartUp_();
 
     while(1)

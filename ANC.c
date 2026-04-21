@@ -8,6 +8,16 @@ volatile unsigned int g_logWriteIdx = 0;
 volatile unsigned int g_logReadIdx  = 0;
 volatile unsigned int g_logOverflow = 0;
 
+/* =========================================================
+   ANC_Init
+   ---------------------------------------------------------
+   Initializes:
+   - LMS state variables
+   - delay line history
+   - filter weights
+   - UART logging buffer indices
+   - UART itself for sending data to MATLAB
+   ========================================================= */
 void ANC_Init(void)
 {
     int i;
@@ -34,6 +44,14 @@ void ANC_Init(void)
     Puts_UART2("d,x,e\r\n");
 }
 
+/* =========================================================
+   ANC_ClampFloat
+   ---------------------------------------------------------
+   Limits a float value to the range [-limit, +limit].
+
+   Used to keep LMS weights from growing too large and
+   blowing up the filter.
+   ========================================================= */
 float ANC_ClampFloat(float x, float limit)
 {
     if(x > limit)  return limit;
@@ -41,6 +59,25 @@ float ANC_ClampFloat(float x, float limit)
     return x;
 }
 
+/* =========================================================
+   ANC_ProcessSample
+   ---------------------------------------------------------
+   Processes one sample of ANC using plain LMS.
+
+   Inputs:
+   - d_in = primary input = desired signal + noise
+   - x_in = reference input = correlated noise
+
+   Steps:
+   1. Shift the reference delay line
+   2. Compute filter output y(n)
+   3. Compute error/output e(n) = d(n) - y(n)
+   4. Update filter coefficients using LMS
+   5. Store latest values for debugging/monitoring
+
+   Returns:
+   - e(n), the noise-reduced output sample
+   ========================================================= */
 float ANC_ProcessSample(float d_in, float x_in)
 {
     int i;
@@ -75,6 +112,21 @@ float ANC_ProcessSample(float d_in, float x_in)
     return e;
 }
 
+/* =========================================================
+   ANC_BufferTriple
+   ---------------------------------------------------------
+   Stores one (d,x,e) sample set into the ring buffer.
+
+   This is designed to be called from the ISR, so it avoids:
+   - sprintf
+   - UART transmission
+   - any slow/blocking work
+
+   UART decimation is used so not every sample is logged.
+   Example: if ANC_UART_DECIM = 16, only every 16th sample
+   is stored for MATLAB transmission.
+   ========================================================= */
+
 /* ISR-safe-ish buffer write: no sprintf, no UART, adapted to x(n) transmission */
 void ANC_BufferTriple(float d, float x, float e)
 {
@@ -99,6 +151,25 @@ void ANC_BufferTriple(float d, float x, float e)
     g_logBuffer[g_logWriteIdx].e = e;
     g_logWriteIdx = nextIdx;
 }
+
+/* =========================================================
+   ANC_StreamBufferedData
+   ---------------------------------------------------------
+   Sends buffered (d,x,e) samples over UART to MATLAB.
+
+   IMPORTANT:
+   - This should be called from the main loop, NOT the ISR.
+   - It sends one character at a time to avoid blocking.
+
+   How it works:
+   1. If a CSV line is already being transmitted, keep sending
+      the next character whenever UART is ready.
+   2. If no line is in progress, pull the next sample from the
+      ring buffer, format it as CSV text, and begin sending it.
+
+   Example transmitted line:
+   0.123456,0.111111,0.098765
+   ========================================================= */
 
 /* Call this in main loop, not ISR */
 void ANC_StreamBufferedData(void)
