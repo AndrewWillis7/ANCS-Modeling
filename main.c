@@ -1,6 +1,6 @@
 #include "ANC.h"
 
-void StartUp(void)
+void _StartUp_(void)
 {
     ANC_Init();
 }
@@ -8,10 +8,11 @@ void StartUp(void)
 int main(void)
 {
     DSP_Init();
-    StartUp();
+    _StartUp_();
 
     while(1)
     {
-        /* main idles here; ISR drives the application */
+        /* main idles here; ISR drives the application, stream to MATLAB */
+        ANC_StreamBufferedData();
     }
 }
