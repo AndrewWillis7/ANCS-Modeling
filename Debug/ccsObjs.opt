@@ -1,3 +1,4 @@
+"./ANC.obj"
 "./ISRs.obj"
 "./LCDK_Support_DSP.obj"
 "./StartUp.obj"

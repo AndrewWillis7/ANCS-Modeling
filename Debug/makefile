@@ -10,6 +10,7 @@ GEN_OPTS__FLAG :=
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
+"./ANC.obj" \
 "./ISRs.obj" \
 "./LCDK_Support_DSP.obj" \
 "./StartUp.obj" \
@@ -145,8 +146,8 @@ myfirstProject1.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "ISRs.obj" "LCDK_Support_DSP.obj" "StartUp.obj" "main.obj" "vectors.obj" 
-	-$(RM) "ISRs.d" "LCDK_Support_DSP.d" "StartUp.d" "main.d" 
+	-$(RM) "ANC.obj" "ISRs.obj" "LCDK_Support_DSP.obj" "StartUp.obj" "main.obj" "vectors.obj" 
+	-$(RM) "ANC.d" "ISRs.d" "LCDK_Support_DSP.d" "StartUp.d" "main.d" 
 	-$(RM) "vectors.d" 
 	-@echo 'Finished clean'
 	-@echo ' '

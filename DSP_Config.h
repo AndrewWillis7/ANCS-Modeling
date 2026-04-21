@@ -30,7 +30,7 @@
 #define DSPBOARDTYPE_TI_OMAPL138_LCDK
 
 /* Pick one sample rate */
-#define SampleRateSetting AIC3106Fs8kHz
+#define SampleRateSetting AIC3106Fs16kHz
 
 /* Use line input for WAV playback from PC */
 #define CodecType LCDK_LineInput
